@@ -1,0 +1,90 @@
+---
+title: "Hello Slidy"
+author: "C. Zhang"
+job: "Research Technologist"
+date: "5/22/2020"
+output: slidy_presentation
+framework: Slidy
+highlighter: highlight.js
+resource_files:
+- data
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## R Markdown
+
+This R Markdown presentation.. Here I will introduce my first Shiny App: Hello Shiny. The target of this app is to analysis the vessel diameter distribution between WT and HD mice. Here is the link to the [Shiny App](https://zhangcc.shinyapps.io/HelloShinyRmd/?_ga=2.266551246.1331206511.1590104791-1830440653.1589990035)
+
+
+## Inputs
+
+- Tissue
+    - Cortex
+    - Striatum
+- Diameter Range
+- Bin Width
+
+## Outputs
+
+- Histogram
+- Density
+- Summary
+
+## Data Summary
+
+```{r ui, echo = FALSE, warning=FALSE, error=FALSE}
+require(dplyr, warn.conflicts = FALSE, quietly = TRUE)
+require(ggplot2, warn.conflicts = FALSE, quietly = TRUE)
+datadir <- "data"
+skelon <- "skelon_diameter.txt"
+rootDir <- getwd()
+
+setwd(file.path(rootDir, datadir))
+dirList <- dir()
+allSkelonDiameter <- data.frame(skelonDiameter = vector(),
+                                model = vector(),
+                                tissue = vector(),
+                                name = vector())
+for (i in 1:length(dirList)) {
+    d <- file.path(rootDir, datadir, dirList[i])
+    if (dir.exists(d)) {
+        setwd(d)
+        if (file.exists(file.path(d, skelon))) {
+            skelonData <- read.csv(file.path(d, skelon), header = TRUE, sep = ";")
+            if (length(grep("^HDCOR", dirList[i], ignore.case = TRUE))) {
+                skelonData <- cbind(skelonData,
+                                    data.frame(model = rep('HD', nrow(skelonData)),
+                                               tissue = rep('COR', nrow(skelonData)),
+                                               name = rep(dirList[i], nrow(skelonData))))
+            } else if(length(grep('^HDSTR', dirList[i], ignore.case = TRUE))) {
+                skelonData <- cbind(skelonData,
+                                    data.frame(model = rep('HD', nrow(skelonData)),
+                                               tissue = rep('STR', nrow(skelonData)),
+                                               name = rep(dirList[i], nrow(skelonData))))
+            } else if(length(grep('^WTCOR', dirList[i], ignore.case = TRUE))) {
+                skelonData <- cbind(skelonData,
+                                    data.frame(model = rep('WT', nrow(skelonData)),
+                                               tissue = rep('COR', nrow(skelonData)),
+                                               name = rep(dirList[i], nrow(skelonData))))
+            } else if(length(grep('^WTSTR', dirList[i], ignore.case = TRUE))) {
+                skelonData <- cbind(skelonData,
+                                    data.frame(model = rep('WT', nrow(skelonData)),
+                                               tissue = rep('STR', nrow(skelonData)),
+                                               name = rep(dirList[i], nrow(skelonData))))
+            } else {
+                skelonData <- cbind(skelonData,
+                                    data.frame(model = rep('UN', nrow(skelonData)),
+                                               tissue = rep('UN', nrow(skelonData)),
+                                               name = rep(dirList[i], nrow(skelonData))))
+            }
+            allSkelonDiameter <- rbind(allSkelonDiameter, skelonData)
+        }
+    }
+}
+setwd(rootDir)
+summary(allSkelonDiameter)
+```
+
